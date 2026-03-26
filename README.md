@@ -138,6 +138,8 @@ free -h
 vmstat 2 5
 ```
 
+**See how to interpret `free` and `vmstat` outputs in Step 2.**
+
 **Healthy signs**
 - Swap stabilised  
 - Reduced I/O wait (`wa`)  
