@@ -38,8 +38,6 @@
 - [Recommended Settings](#recommended-settings)
 - [Teaching Insight](#teaching-insight)
   
-<br />
-
 ---
 
 ## Learning Objective
@@ -54,6 +52,8 @@
 ```bash
 ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 ```
+
+<br />
 
 **Scenario 1 — Active execution (healthy)**
 
@@ -71,6 +71,7 @@ ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 - Very high memory (49.5%, 17.3%) → `blast_formatter` is memory-intensive process
 - java → Nextflow controller (low CPU, expected) 
 
+<br />
 
 **Scenario 2 — Idle or finished**
 
@@ -86,6 +87,8 @@ ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 - only background/system processes
 - no workflow-related processes consuming CPU
 - pipeline is not running or may be idle, stuck, or finished
+
+<br />
 
 **Scenario 3 — Resource bottleneck**
 
@@ -106,7 +109,7 @@ ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 
 ## Step 2 — Diagnose system resources
 
-**System Load**
+### **2.1 System Load**
 
 ```
 uptime | awk -F'load average: ' '{print "load average: " $2}'
@@ -124,8 +127,9 @@ load average: 2.06, 2.11, 2.80
 - Load ≤ CPU cores → system is healthy
 - Load > CPU cores → system is overloaded
 
+<br />
 
-**CPU Cores**
+### **2.2 CPU Cores**
 
 ```bash
 nproc
@@ -140,8 +144,9 @@ nproc
 - number of available CPU cores
 - used as a reference to compare with load average from uptime
 
+<br />
 
-**Memory Usage**
+### **2.3 Memory Usage**
 
 ```bash
 free -h
@@ -170,8 +175,9 @@ free -h
   - 662 Mi used out of 8.0 Gi total (~8%)  
   - Low usage relative to total → no memory pressure
 
+<br />
 
-**System Activity (CPU, Memory, I/O)**
+### **2.4 System Activity (CPU, Memory, I/O)**
 
 ```bash
 vmstat 2 5
@@ -212,7 +218,7 @@ vmstat 2 5
 
 - System is idle and healthy: no CPU contention, no memory pressure, and no disk I/O bottleneck
 
----
+<br />
 
 ## System Bottleneck Flow
 
