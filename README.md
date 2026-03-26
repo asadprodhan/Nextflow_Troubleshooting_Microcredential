@@ -52,12 +52,46 @@
 ## Step 1 — Check pipeline status
 
 ```bash
-ps -ef | grep -i nextflow | grep -v grep
+ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 ```
 
+**Scenario 1 — Active execution (healthy)**
+
+PID     COMMAND           %CPU   %MEM
+70562   blast_formatter   26.8   49.5
+70591   blast_formatter   13.4   17.3
+69366   java               0.4    0.0
+
+
 **Interpretation**
-- Processes present → pipeline running  
-- No process → pipeline stopped  
+- blast_formatter → two `blast_formatter` processes are running → the workflow is running
+- High CPU (26.8%, 13.4%) → `blast_formatter` is actively computing → tasks are actively progressing 
+- Very high memory (49.5%, 17.3%) → `blast_formatter` is memory-intensive process
+- java → Nextflow controller (low CPU, expected) 
+
+**Scenario 2 — Idle or finished**
+
+PID     COMMAND            %CPU   %MEM
+69366   java                 0.3   0.1
+2705    gnome-shell          0.1   0.0
+
+**Interpretation**
+
+- only background/system processes
+- no workflow-related processes consuming CPU
+- pipeline is not running or may be idle, stuck, or finished
+
+**Scenario 3 — Resource bottleneck**
+
+PID     COMMAND            %CPU   %MEM
+70562   blastn               0.5   10.2
+70591   blastn               0.3   10.1
+
+**Interpretation**
+
+- workflow processes exist but CPU usage is very low
+- tasks are waiting (likely disk I/O or memory issue)
+- pipeline is slowed by resource bottlenecks
 
 ---
 
