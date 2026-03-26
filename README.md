@@ -251,10 +251,15 @@ find work -name ".exitcode" -exec sh -c 'for f; do printf "%s\n" "$(cat "$f")"; 
 tail -f .nextflow.log
 ```
 
-**Interpretation**
-- `Submitted` → tasks launching  
-- `ERROR` → actual failure  
-- `SIGINT` → manual interruption  
+**Interpretation of TaskHandler fields**
+
+- `TaskHandler` → Internal Nextflow object representing a single task (process execution unit)  
+- `id` → Unique identifier for the task within the workflow  
+- `name` → Process name and input label (e.g. `blastn (sample1)`)  
+- `status` → Current state (`NEW`, `RUNNING`, `COMPLETED`, etc.)  
+- `exit` → Exit code after completion (`0` = success; non-zero = failure/interruption)  
+- `error` → Error message if the task failed (empty if none)  
+- `workDir` → Directory containing task scripts, logs, and outputs  
 
 ---
 
