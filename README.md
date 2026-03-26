@@ -106,64 +106,113 @@ ps -eo pid,comm,%cpu,%mem --sort=-%cpu | head
 
 ## Step 2 — Diagnose system resources
 
+**System Load**
+
+```
+uptime | awk -F'load average: ' '{print "load average: " $2}'
+```
+
+**Output**
+
+load average: 2.06, 2.11, 2.80
+
+
+**Interpretation**
+
+- `load average` shows system load over 1, 5, and 15 minutes
+- Compare these values with the number of CPU cores (nproc)
+- Load ≤ CPU cores → system is healthy
+- Load > CPU cores → system is overloaded
+
+
+**CPU Cores**
+
 ```bash
-uptime
 nproc
+```
+
+**Output**
+
+20
+
+**Interpretation**
+
+- number of available CPU cores
+- used as a reference to compare with load average from uptime
+
+
+**Memory Usage**
+
+```bash
 free -h
+```
+
+**Output**
+
+| Type | Total | Used  | Free  | Shared | Buff/Cache | Available |
+|------|------|------|------|--------|-----------|-----------|
+| Mem  | 125Gi | 1.8Gi | 68Gi | 9.1Mi  | 56Gi      | 123Gi     |
+| Swap | 8.0Gi | 662Mi | 7.4Gi | —      | —         | —         |
+
+
+**Interpretation**
+
+- `available` → actual usable memory for new processes  
+  - 123 Gi available out of 125 Gi total → almost all memory is available  
+  - High available memory → system has sufficient RAM  
+
+- `buff/cache` → filesystem cache used by the OS to speed up I/O  
+  - 56 Gi used as cache → normal behaviour  
+  - Compared with 123 Gi available → cache is not limiting memory  
+  - High `buff/cache` is automatically reclaimed when needed  
+
+- `Swap` → overflow memory used when RAM is insufficient  
+  - 662 Mi used out of 8.0 Gi total (~8%)  
+  - Low usage relative to total → no memory pressure
+
+
+**System Activity (CPU, Memory, I/O)**
+
+```bash
 vmstat 2 5
 ```
 
-### `uptime`
-- Shows system load average (1, 5, 15 min)
-- Compare with `nproc` (CPU cores)
+| r | b | swpd  | free     | buff | cache    | si  | so  | bi    | bo    | in  | cs  | us | sy | id  | wa | st | gu |
+|---|---|-------|----------|------|----------|-----|-----|-------|-------|-----|-----|----|----|-----|----|----|----|
+| 1 | 0 | 678808 | 71702520 | 5284 | 59408296 | 775 | 1140 | 28318 | 10387 | 6616 | 1   | 13 | 0  | 82  | 6  | 0  | 0  |
+| 0 | 0 | 678808 | 71702520 | 5284 | 59408356 | 0   | 0   | 0     | 0     | 128 | 131 | 0  | 0  | 100 | 0  | 0  | 0  |
+| 0 | 0 | 678808 | 71702520 | 5284 | 59408356 | 0   | 0   | 0     | 0     | 143 | 140 | 0  | 0  | 100 | 0  | 0  | 0  |
+| 0 | 0 | 678808 | 71702520 | 5284 | 59408356 | 0   | 0   | 0     | 0     | 118 | 119 | 0  | 0  | 100 | 0  | 0  | 0  |
+| 0 | 0 | 678808 | 71702520 | 5284 | 59408356 | 0   | 0   | 0     | 0     | 139 | 151 | 0  | 0  | 100 | 0  | 0  | 0  |
+
 
 **Interpretation**
-- Load ≈ cores → fully utilised  
-- Load >> cores → overloaded  
 
----
+- `r` (running processes) → 1 initially, then 0  
+  - Very low CPU demand → no contention  
 
-### `free -h`
-Example:
-```
-              total   used   free   buff/cache   available
-Mem:          125Gi   38Gi   19Gi   68Gi         87Gi
-Swap:         8.0Gi   8.0Gi  0Gi
-```
+- `b` (blocked processes) → consistently 0  
+  - No processes waiting on I/O → no disk bottleneck  
 
-**Key fields**
-- `used` → actively used memory  
-- `free` → unused memory  
-- `buff/cache` → filesystem cache (GOOD, not a problem)  
-- `available` → real usable memory  
-- `Swap` → overflow memory  
+- `swpd` → 678,808 KB (~0.65 Gi)  
+  - Very low swap usage → no memory pressure  
 
-**Interpretation**
-- High swap usage → memory pressure ⚠️  
-- High cache → normal (do not clear)  
-- Low available → risk of swapping  
+- `si/so` (swap in/out) → initially 775 / 1140, then 0  
+  - No ongoing swapping → memory is stable  
 
----
+- `bi/bo` (disk I/O) → initially 28,318 / 10,387, then 0  
+  - Brief disk activity followed by idle → no sustained I/O load  
 
-### `vmstat 2 5`
-Example columns:
-```
-r  b   swpd   free   si   so   wa
-6 15 8383860 20786332 722 1065 48
-```
+- `us` (CPU user) → initially 13%, then 0%  
+- `id` (CPU idle) → 82–100%  
+  - CPU mostly idle → system not under load  
 
-**Key fields**
-- `r` → runnable processes (CPU demand)  
-- `b` → blocked processes (I/O wait)  
-- `swpd` → swap used  
-- `si/so` → swap in/out  
-- `wa` → I/O wait  
+- `wa` (I/O wait) → 6%, then 0%  
+  - Very low → no I/O bottleneck  
 
-**Interpretation**
-- `wa > 20–30%` → disk bottleneck ⚠️  
-- High `b` → processes waiting on disk  
-- High `si/so` → active swapping (bad)  
-- High `r` → CPU contention  
+**Conclusion**
+
+- System is idle and healthy: no CPU contention, no memory pressure, and no disk I/O bottleneck
 
 ---
 
