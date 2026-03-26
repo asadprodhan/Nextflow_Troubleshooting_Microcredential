@@ -201,9 +201,14 @@ pgrep -af '^blastn '
 ```bash
 find work -name ".exitcode" | wc -l
 ```
+Run the above code over time. Say the outputs are follows:
 
-**Interpretation**
-- Increasing count → pipeline progressing  
+> 15 19 21
+
+**What this means**
+
+- Each .exitcode file represents a completed task
+- Increasing count → pipeline progressing. Even if the pipeline appears slow, an increasing .exitcode count is a reliable indicator of ongoing execution  
 - Static count → tasks still running or waiting  
 
 ---
