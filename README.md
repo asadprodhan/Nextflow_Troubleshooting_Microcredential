@@ -216,12 +216,32 @@ Run the above code over time. Say the outputs are follows:
 ## Step 8 — Check task results
 
 ```bash
-find work -name ".exitcode" -exec cat {} \;
+find work -name ".exitcode" -exec sh -c 'for f; do printf "%s\n" "$(cat "$f")"; done' sh {} \; | sort | uniq -c
 ```
 
+**Example output**
+
+10 0
+
+9 130
+
+2 143
+
 **Interpretation**
-- `0` → successful execution  
-- `130 / 143` → interrupted tasks (not intrinsic errors)  
+- 11 tasks → exit code 0. These completed successfully. No issues with BLAST or pipeline logic   
+- 8 tasks → exit code 130. Typically caused by SIGINT (e.g. Ctrl+C or workflow interruption)
+- 2 tasks → exit code 143. Typically caused by SIGTERM (e.g. process killed or system shutdown)
+
+**What this means overall**
+- Total tasks: 21
+- ~52% completed successfully
+- ~48% interrupted externally
+
+**This strongly indicates:**
+
+- The pipeline itself is working correctly
+- The failures are not due to errors in the pipeline/s
+- Tasks were interrupted due to external events (e.g. killing process, resource overload, SIGINT)
 
 ---
 
